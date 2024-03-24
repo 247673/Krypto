@@ -15,6 +15,9 @@ public class DESApp extends Application {
         stage.setTitle("DES Encryption/Decryption");
         stage.setScene(scene);
         stage.show();
+        DES des = new DES();
+        des.StringToByte();
+        des.getSubKeys();
     }
 
     public static void main(String[] args) {
