@@ -118,51 +118,27 @@ public class DES {
         }
         return binary.toString();
     }
-    public static String[] divideIntoBlocks(String binaryString) {
-        // Określenie liczby bloków na podstawie długości ciągu binarnego i wielkości bloku
-        int numBlocks = (int) Math.ceil((double) binaryString.length() / 64);
-        // Inicjalizacja tablicy dla bloków
-        String[] blocks = new String[numBlocks];
 
-        // Podział ciągu binarnego na bloki
-        for (int i = 0; i < numBlocks; i++) {
-            // Obliczenie indeksu początkowego dla bieżącego bloku
-            int startIndex = i * 64;
-            // Obliczenie indeksu końcowego dla bieżącego bloku
-            int endIndex = Math.min((i + 1) * 64, binaryString.length());
-            // Wycięcie bieżącego bloku z ciągu binarnego
-            String block = binaryString.substring(startIndex, endIndex);
-
-            // Jeśli długość bloku jest mniejsza niż blockSize, należy dodać padding zer
-            if (block.length() < 64) {
-                // Obliczenie liczby zer do dodania dla wypełnienia bloku
-                int paddingZeros = 64 - block.length();
-                // Dodanie paddingu zer do bloku
-                block = block + "0".repeat(paddingZeros);
-            }
-
-            // Dodanie bloku do tablicy
-            blocks[i] = block;
-        }
-
-        return blocks;
-    }
-    public static String initialPermutation(String block) {
-        StringBuilder permutedBlock = new StringBuilder();
+    public static String initialPermutation(String text) {
+        StringBuilder permutedText = new StringBuilder();
         for (int i = 0; i < IP.length; i++) {
-            permutedBlock.append(block.charAt(IP[i] - 1));
+            permutedText.append(text.charAt(IP[i] - 1));
         }
-        return permutedBlock.toString();
+        return permutedText.toString();
     }
 
     public static void main(String[] args) {
         String text = "Hello World!";
-        String binaryString = stringToBinary(text);
-        System.out.println("Binary representation: " + binaryString);
-        String[] blocks = divideIntoBlocks(binaryString);
-        String permutedBlock = initialPermutation(blocks[0]);
-        System.out.println("Permuted block: " + permutedBlock);
+        String binaryText = stringToBinary(text);
+        System.out.println("Binary representation: " + binaryText);
+        String permutedText = initialPermutation(binaryText);
+        System.out.println("Permutated text: " + permutedText);
+        String L0 = permutedText.substring(0, 32);
+        String R0 = permutedText.substring(32);
+        System.out.println("L0: " + L0);
+        System.out.println("R0: " + R0);
     }
+
     public byte[] StringToByte() {
         byte[] key = new byte[strKey.length() / 2];
         for (int i = 0; i < strKey.length() / 2; i++) {
