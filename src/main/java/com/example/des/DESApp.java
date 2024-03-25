@@ -17,7 +17,7 @@ public class DESApp extends Application {
         stage.setScene(scene);
         stage.show();
         DES des = new DES();
-        System.out.println(Arrays.toString(des.StringToByte()));
+        //System.out.println(Arrays.toString(des.StringToByte()));
         des.getSubKeys();
     }
 

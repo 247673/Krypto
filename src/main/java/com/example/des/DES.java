@@ -5,9 +5,9 @@ import java.util.Scanner;
 
 public class DES {
     static String input = "dupaweza";
-    String strKey = "0123456789ABCDEF";
+    static String strKey = "0123456789ABCDEF";
 
-    byte[] bitKey;
+    static byte[] bitKey;
 
     static final byte[] IP = {
             58, 50, 42, 34, 26, 18, 10, 2,
@@ -41,7 +41,7 @@ public class DES {
             21, 13, 5, 28, 20, 12, 4
     };
 
-    final byte[] PC2 = {
+    static final byte[] PC2 = {
             14, 17, 11, 24, 1, 5,
             3, 28, 15, 6, 21, 10,
             23, 19, 12, 4, 26, 8,
@@ -52,7 +52,7 @@ public class DES {
             46, 42, 50, 36, 29, 32
     };
 
-    final byte[] E = {
+    static final byte[] E = {
             32, 1, 2, 3, 4, 5,
             4, 5, 6, 7, 8, 9,
             8, 9, 10, 11, 12, 13,
@@ -100,8 +100,53 @@ public class DES {
             };
 
 
-    public void encrypt() {
-//        byte[][] subKeys = getSubKeys();
+    public static void encrypt() {
+        Scanner myObj = new Scanner(System.in);
+        System.out.print("Wprowadź tekst: ");
+        String message = myObj.nextLine();
+        String binaryText = stringToBinary(message);
+        System.out.println("Binary representation: " + binaryText);
+        String[] blocks = divideIntoBlocks(binaryText);
+        padding(blocks[blocks.length-1]);
+        byte[][] byteBlock = new byte[blocks.length][];
+        String[] permutatedBlock;
+        for (int i = 0; i < blocks.length; i++) {
+            permutatedBlock = new String[]{initialPermutation(blocks[i])};
+            System.out.println("Permutated text: " + permutatedBlock[i]);
+            byteBlock[i] = StringToByte(permutatedBlock[i]);
+        }
+        byte[][] subKeys = getSubKeys();
+        System.out.println(Arrays.deepToString(subKeys));
+        byte[] L = new byte[16];
+        byte[] R = new byte[16];
+        for (int j = 0; j<blocks.length; j++){
+            System.arraycopy(byteBlock[j], 0, L, 0, 8);
+            System.arraycopy(byteBlock[j], 8, R, 0, 8);
+            System.out.println(L[0]);
+            System.out.println(R[0]);
+            /*
+            for (int i = 1; i<17; i++){
+              L[i] = R[i-1];
+              R[i] = XOR(L[i-1], fForEncrypting(R[i-1], subKeys[i]));
+
+            }
+
+             */
+        }
+    }
+
+    public static byte[] XOR (byte[] L, byte[] F) {
+        byte[] xorResult = new byte[8];
+        for (int i = 0; i < 8; i++) {
+            xorResult[i] = (byte) (L[i] ^ F[i]);
+        }
+        return xorResult;
+    }
+    public static String fForEncrypting(byte R, byte[] K){
+
+        for (int i = 0; i < E.length; i++) {
+        }
+return "mama";
     }
     public static String stringToBinary(String text) {
         StringBuilder binary = new StringBuilder();
@@ -136,7 +181,7 @@ public class DES {
 
         return blocks;
     }
-    public static String padding(String block) {
+    public static void padding(String block) {
         // Sprawdzenie długości bloku
         int length = block.length();
         // Obliczenie liczby brakujących bitów do pełnego 64-bitowego bloku
@@ -146,7 +191,6 @@ public class DES {
         for (int i = 0; i < paddingZeros; i++) {
             paddedBlock.append('0');
         }
-        return paddedBlock.toString();
     }
 
     public static String initialPermutation(String text) {
@@ -158,32 +202,18 @@ public class DES {
     }
 
     public static void main(String[] args) {
-        Scanner myObj = new Scanner(System.in);
-        System.out.print("Wprowadź tekst: ");
-        String message = myObj.nextLine();
-        String binaryText = stringToBinary(message);
-        System.out.println("Binary representation: " + binaryText);
-        String[] blocks = divideIntoBlocks(binaryText);
-        String[] block = new String[0];
-        String[] permutatedBlock;
-        for (int i = 0; i < blocks.length; i++) {
-            block = new String[]{padding(blocks[i])};
-        }
-        for (int i = 0; i < block.length; i++) {
-            permutatedBlock = new String[]{initialPermutation(block[i])};
-            System.out.println("Permutated text: " + permutatedBlock[i]);
-        }
+        encrypt();
     }
 
-    public byte[] StringToByte() {
-        byte[] key = new byte[strKey.length() / 2];
-        for (int i = 0; i < strKey.length() / 2; i++) {
-            key[i] += (byte) Integer.parseInt(strKey.substring(i*2, i*2 + 2), 16);
+    public static byte[] StringToByte(String s) {
+        byte[] key = new byte[s.length() / 2];
+        for (int i = 0; i < s.length() / 2; i++) {
+            key[i] += (byte) Integer.parseInt(s.substring(i*2, i*2 + 2), 16);
         }
         return key;
     }
 
-    public String byteToBits(byte b)
+    public static String byteToBits(byte b)
     {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 8; i++)
@@ -193,16 +223,16 @@ public class DES {
         return sb.toString();
     }
 
-    public byte[] turnOffLast() {
+    public static byte[] turnOffLast() {
         byte[] key;
-        key = StringToByte();
+        key = StringToByte(strKey);
         for (int i = 0; i < strKey.length() / 2; i++) {
             key[i] = (byte) (key[i] & 0xFE);
         }
         return key;
     }
 
-    public byte[][] getSubKeys() {
+    public static byte[][] getSubKeys() {
         byte[][] subKeys = new byte[16][];
         byte[] combined = new byte[8];
         bitKey = turnOffLast();
@@ -229,7 +259,7 @@ public class DES {
         return subKeys;
     }
 
-    public byte[] fillSubKey(byte[] array) {
+    public static byte[] fillSubKey(byte[] array) {
         byte[] newSubKey = new byte[6];
         int keyIndex = 0;
         byte current = 0;
@@ -249,7 +279,7 @@ public class DES {
         return newSubKey;
     }
 
-    public byte[] rotateLeft(byte[] array, int n) {
+    public static byte[] rotateLeft(byte[] array, int n) {
         byte[] rotated = new byte[array.length];
         for (int i = 0; i < array.length; i++) {
             int newIndex = (i - n) % array.length;
