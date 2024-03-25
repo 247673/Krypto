@@ -147,6 +147,16 @@ public class DES {
         return key;
     }
 
+    public String byteToBits(byte b)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++)
+        {
+            sb.append(b >> (8 - (i + 1)) & 0x0001);
+        }
+        return sb.toString();
+    }
+
     public byte[] turnOffLast() {
         byte[] key;
         key = StringToByte();
@@ -167,9 +177,6 @@ public class DES {
         System.arraycopy(bitKey, 0, leftHalf, 0, 4);
         System.arraycopy(bitKey, 4, rightHalf, 0, 4);
 
-        System.out.println(Arrays.toString(leftHalf));
-        System.out.println(Arrays.toString(rightHalf));
-
         for (int i = 0; i < 16; i++) {
             if (i == 0 || i == 1 || i == 8 || i == 15) {
                 leftHalf = rotateLeft(leftHalf, 1);
@@ -181,11 +188,29 @@ public class DES {
             }
             System.arraycopy(leftHalf, 0, combined, 0, 4);
             System.arraycopy(rightHalf, 0, combined, 4, 4);
-            subKeys[i] = combined;
-            System.out.println(Arrays.toString(subKeys[i]));
+            subKeys[i] = fillSubKey(combined);
         }
-
         return subKeys;
+    }
+
+    public byte[] fillSubKey(byte[] array) {
+        byte[] newSubKey = new byte[6];
+        int keyIndex = 0;
+        byte current = 0;
+
+        for (int i = 0; i < PC2.length; i++) {
+            int bitIndex = PC2[i] % 8;
+            int byteIndex = PC2[i] / 8;
+            String temp = byteToBits(array[byteIndex]);
+            char bit = temp.charAt(bitIndex);
+            current = (byte) (current << 1);
+            if (bit == '1') current = (byte) (current | 1);
+            if (i % 8 == 7) {
+                newSubKey[keyIndex++] = current;
+                current = 0;
+            }
+        }
+        return newSubKey;
     }
 
     public byte[] rotateLeft(byte[] array, int n) {
