@@ -8,7 +8,7 @@ public class DES {
 
     byte[] bitKey;
 
-    final byte[] IP = {
+    static final byte[] IP = {
             58, 50, 42, 34, 26, 18, 10, 2,
             60, 52, 44, 36, 28, 20, 12, 4,
             62, 54, 46, 38, 30, 22, 14, 6,
@@ -61,7 +61,7 @@ public class DES {
             24, 25, 26, 27, 28, 29,
             28, 29, 30, 31, 32, 1
     };
-    
+
     final byte[] SBoxes =
             {
                     14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7, // S1
@@ -106,7 +106,63 @@ public class DES {
     public void encrypt() {
 //        byte[][] subKeys = getSubKeys();
     }
+    public static String stringToBinary(String text) {
+        StringBuilder binary = new StringBuilder();
+        for (char character : text.toCharArray()) {
+            String charBinary = Integer.toBinaryString(character);
+            // Uzupełnienie zerami z przodu, jeśli długość ciągu binarnego jest mniejsza niż 8 bitów
+            while (charBinary.length() < 8) {
+                charBinary = "0" + charBinary;
+            }
+            binary.append(charBinary);
+        }
+        return binary.toString();
+    }
+    public static String[] divideIntoBlocks(String binaryString) {
+        // Określenie liczby bloków na podstawie długości ciągu binarnego i wielkości bloku
+        int numBlocks = (int) Math.ceil((double) binaryString.length() / 64);
+        // Inicjalizacja tablicy dla bloków
+        String[] blocks = new String[numBlocks];
 
+        // Podział ciągu binarnego na bloki
+        for (int i = 0; i < numBlocks; i++) {
+            // Obliczenie indeksu początkowego dla bieżącego bloku
+            int startIndex = i * 64;
+            // Obliczenie indeksu końcowego dla bieżącego bloku
+            int endIndex = Math.min((i + 1) * 64, binaryString.length());
+            // Wycięcie bieżącego bloku z ciągu binarnego
+            String block = binaryString.substring(startIndex, endIndex);
+
+            // Jeśli długość bloku jest mniejsza niż blockSize, należy dodać padding zer
+            if (block.length() < 64) {
+                // Obliczenie liczby zer do dodania dla wypełnienia bloku
+                int paddingZeros = 64 - block.length();
+                // Dodanie paddingu zer do bloku
+                block = block + "0".repeat(paddingZeros);
+            }
+
+            // Dodanie bloku do tablicy
+            blocks[i] = block;
+        }
+
+        return blocks;
+    }
+    public static String initialPermutation(String block) {
+        StringBuilder permutedBlock = new StringBuilder();
+        for (int i = 0; i < IP.length; i++) {
+            permutedBlock.append(block.charAt(IP[i] - 1));
+        }
+        return permutedBlock.toString();
+    }
+
+    public static void main(String[] args) {
+        String text = "Hello World!";
+        String binaryString = stringToBinary(text);
+        System.out.println("Binary representation: " + binaryString);
+        String[] blocks = divideIntoBlocks(binaryString);
+        String permutedBlock = initialPermutation(blocks[0]);
+        System.out.println("Permuted block: " + permutedBlock);
+    }
     public byte[] StringToByte() {
         byte[] key = new byte[strKey.length() / 2];
         for (int i = 0; i < strKey.length() / 2; i++) {
