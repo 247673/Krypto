@@ -1,9 +1,10 @@
 package com.example.des;
 
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class DES {
-    String input = "dupaweza";
+    static String input = "dupaweza";
     String strKey = "0123456789ABCDEF";
 
     byte[] bitKey;
@@ -98,10 +99,6 @@ public class DES {
                     2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11
             };
 
-    final int[] keyShifts = {
-            1, 1, 2, 2, 2, 2, 2, 2,
-            1, 2, 2, 2, 2, 2, 2, 1
-    };
 
     public void encrypt() {
 //        byte[][] subKeys = getSubKeys();
@@ -118,6 +115,39 @@ public class DES {
         }
         return binary.toString();
     }
+    public static String[] divideIntoBlocks(String binaryString) {
+        // Określenie liczby bloków na podstawie długości ciągu binarnego i wielkości bloku
+        int numBlocks = (int) Math.ceil((double) binaryString.length() / 64);
+        // Inicjalizacja tablicy dla bloków
+        String[] blocks = new String[numBlocks];
+
+        // Podział ciągu binarnego na bloki
+        for (int i = 0; i < numBlocks; i++) {
+            // Obliczenie indeksu początkowego dla bieżącego bloku
+            int startIndex = i * 64;
+            // Obliczenie indeksu końcowego dla bieżącego bloku
+            int endIndex = Math.min((i + 1) * 64, binaryString.length());
+            // Wycięcie bieżącego bloku z ciągu binarnego
+            String block = binaryString.substring(startIndex, endIndex);
+
+            // Dodanie bloku do tablicy
+            blocks[i] = block;
+        }
+
+        return blocks;
+    }
+    public static String padding(String block) {
+        // Sprawdzenie długości bloku
+        int length = block.length();
+        // Obliczenie liczby brakujących bitów do pełnego 64-bitowego bloku
+        int paddingZeros = 64 - length;
+        // Uzupełnienie bloku zerami
+        StringBuilder paddedBlock = new StringBuilder(block);
+        for (int i = 0; i < paddingZeros; i++) {
+            paddedBlock.append('0');
+        }
+        return paddedBlock.toString();
+    }
 
     public static String initialPermutation(String text) {
         StringBuilder permutedText = new StringBuilder();
@@ -128,15 +158,21 @@ public class DES {
     }
 
     public static void main(String[] args) {
-        String text = "Hello World!";
-        String binaryText = stringToBinary(text);
+        Scanner myObj = new Scanner(System.in);
+        System.out.print("Wprowadź tekst: ");
+        String message = myObj.nextLine();
+        String binaryText = stringToBinary(message);
         System.out.println("Binary representation: " + binaryText);
-        String permutedText = initialPermutation(binaryText);
-        System.out.println("Permutated text: " + permutedText);
-        String L0 = permutedText.substring(0, 32);
-        String R0 = permutedText.substring(32);
-        System.out.println("L0: " + L0);
-        System.out.println("R0: " + R0);
+        String[] blocks = divideIntoBlocks(binaryText);
+        String[] block = new String[0];
+        String[] permutatedBlock;
+        for (int i = 0; i < blocks.length; i++) {
+            block = new String[]{padding(blocks[i])};
+        }
+        for (int i = 0; i < block.length; i++) {
+            permutatedBlock = new String[]{initialPermutation(block[i])};
+            System.out.println("Permutated text: " + permutatedBlock[i]);
+        }
     }
 
     public byte[] StringToByte() {
