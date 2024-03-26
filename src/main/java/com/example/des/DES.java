@@ -1,10 +1,8 @@
 package com.example.des;
 
 import java.util.Arrays;
-import java.util.Scanner;
 
 public class DES {
-    static String input = "dupaweza";
     static String strKey = "0123456789ABCDEF";
 
     static byte[] bitKey;
@@ -20,7 +18,7 @@ public class DES {
             63, 55, 47, 39, 31, 23, 15, 7
     };
 
-    final byte[] IPPowerMinus1 = {
+    static final byte[] IPPowerMinus1 = {
             40, 8, 48, 16, 56, 24, 64, 32,
             39, 7, 47, 15, 55, 23, 63, 31,
             38, 6, 46, 14, 54, 22, 62, 30,
@@ -30,17 +28,10 @@ public class DES {
             34, 2, 42, 10, 50, 18, 58, 26,
             33, 1, 41, 9, 49, 17, 57, 25};
 
-    final byte[] PC1 = {
-            57, 49, 41, 33, 25, 17, 9,
-            1, 58, 50, 42, 34, 26, 18,
-            10, 2, 59, 51, 43, 35, 27,
-            19, 11, 3, 60, 52, 44, 36,
-            63, 55, 47, 39, 31, 23, 15,
-            7, 62, 54, 46, 38, 30, 22,
-            14, 6, 61, 53, 45, 37, 29,
-            21, 13, 5, 28, 20, 12, 4
-    };
-
+    static final byte[] PC1 = {57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34,
+            26, 18, 10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44,
+            36, 63, 55, 47, 39, 31, 23, 15, 7, 62, 54, 46, 38, 30,
+            22, 14, 6, 61, 53, 45, 37, 29, 21, 13, 5, 28, 20, 12, 4};
     static final byte[] PC2 = {
             14, 17, 11, 24, 1, 5,
             3, 28, 15, 6, 21, 10,
@@ -63,8 +54,7 @@ public class DES {
             28, 29, 30, 31, 32, 1
     };
 
-    final byte[] SBoxes =
-            {
+    final static byte[] SBoxes = {
                     14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7, // S1
                     0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8,
                     4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0,
@@ -98,6 +88,14 @@ public class DES {
                     7, 11, 4, 1, 9, 12, 14, 2, 0, 6, 10, 13, 15, 3, 5, 8,
                     2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11
             };
+    final static byte[] P = {
+            16, 7, 20, 21, 29, 12, 28, 17,
+            1, 15, 23, 26, 5, 18, 31, 10,
+            2, 8, 24, 14, 32, 27, 3, 9,
+            19, 13, 30, 6, 22, 11, 4, 25
+    };
+    static byte[] coded;
+    static String decrypted = "";
 
     public static String stringToHex(String message) {
         StringBuilder hexString = new StringBuilder();
@@ -137,52 +135,209 @@ public class DES {
                     current = 0;
                 }
             }
+            blockIndex = 0;
         }
         return permutatedBlock;
     }
-    public static void encrypt() {
-        Scanner myObj = new Scanner(System.in);
-        System.out.print("Wprowadź tekst: ");
-        String message = myObj.nextLine();
-        String messHex = stringToHex(message);
-        byte[] messByte = StringToByte(messHex);
+
+
+    public static byte[] encrypt(String plaintext) {
+        StringBuilder C = new StringBuilder();
+        String messHex = stringToHex(plaintext);
+        byte[] messByte = HexToByte(messHex);
         byte[][] blocks = divideIntoBlocks(messByte);
-        addPadding(blocks[blocks.length-1]);
-        System.out.println(Arrays.deepToString(blocks));
+        //addPadding(blocks[blocks.length - 1]);
         blocks = permuteBlocks(blocks);
-        System.out.println(Arrays.deepToString(blocks));
         byte[][] subKeys = getSubKeys();
-        byte[] L = new byte[16];
-        byte[] R = new byte[16];
-        for (int j = 0; j<blocks.length; j++) {
-         //   System.arraycopy(byteBlock[j], 0, L, 0, 8);
-         //   System.arraycopy(byteBlock[j], 8, R, 0, 8);
-         //   System.out.println(L[0]);
-         //   System.out.println(R[0]);
-            /*
-            for (int i = 1; i<17; i++){
-              L[i] = R[i-1];
-              R[i] = XOR(L[i-1], fForEncrypting(R[i-1], subKeys[i]));
-
+        byte[] L = new byte[4];
+        byte[] R = new byte[4];
+        String[] LString = new String[17];
+        String[] RString = new String[17];
+        for (int i = 0; i < blocks.length; i++) {
+            System.arraycopy(blocks[i], 0, L, 0, 4);
+            System.arraycopy(blocks[i], 4, R, 0, 4);
+            StringBuilder Lbuilder = new StringBuilder();
+            StringBuilder Rbuilder = new StringBuilder();
+            for (int k = 0; k<L.length; k++) {
+                Lbuilder.append(byteToBits(L[k]));
+                Rbuilder.append(byteToBits(R[k]));
             }
-
-             */
+            LString[0] = String.valueOf(Lbuilder);
+            RString[0] = String.valueOf(Rbuilder);
+            for (int j = 1; j<17; j++) {
+                LString[j] = RString[j-1];
+                if (j == 16) {
+                    LString[j - 1] = LString[j - 1].substring(0, 32);
+                }
+                RString[j] = XOR(LString[j - 1], fForEncrypting(RString, subKeys[j - 1]));
+            }
+            String finish = RString[16] + LString[16];
+            String result = permuteWithIPMinus1(finish);
+            C.append(result);
         }
+        System.out.println(C);
+        coded = binaryStringToBytes(String.valueOf(C));
+        return coded;
+    }
+    public static byte[] binaryStringToBytes(String binaryString) {
+        int length = binaryString.length();
+        byte[] bytes = new byte[length / 8];
+
+        // Iterujemy po ciągu binarnym, dzieląc go na 8-bitowe kawałki
+        for (int i = 0; i < length; i += 8) {
+            String byteString = binaryString.substring(i, i + 8);
+            byte b = (byte) Integer.parseInt(byteString, 2); // Parsujemy ciąg binarny do bajta
+            bytes[i / 8] = b; // Wstawiamy bajt do tablicy bajtów
+        }
+
+        return bytes;
+    }
+    public static String removePadding(String paddedBlock) {
+        int paddedValue = paddedBlock.charAt(7) - '0'; // Konwersja znaku na liczbę
+        for (int i = 6; i > 7 - paddedValue; i--) {
+            if (paddedBlock.charAt(i) != paddedBlock.charAt(7)) {
+                return paddedBlock;
+            }
+        }
+        return paddedBlock.substring(0, 8 - paddedValue);
+    }
+    public static String binaryToAscii(String binaryString) {
+        StringBuilder asciiString = new StringBuilder();
+
+        // Iteruj po ciągu binarnym, dzieląc go na kawałki po 8 bitów
+        for (int i = 0; i < binaryString.length(); i += 8) {
+            // Pobierz kolejny bajt z ciągu binarnego
+            String byteString = binaryString.substring(i, Math.min(i + 8, binaryString.length()));
+
+            // Przekonwertuj bajt na znak ASCII
+            int asciiValue = Integer.parseInt(byteString, 2);
+            char asciiChar = (char) asciiValue;
+
+            // Dodaj znak ASCII do wynikowego ciągu
+            asciiString.append(asciiChar);
+        }
+
+        return asciiString.toString();
+    }
+    public static String decrypt() {
+        StringBuilder D = new StringBuilder();
+        byte[] messByte = coded;
+        byte[][] blocks = divideIntoBlocks(messByte);
+        blocks = permuteBlocks(blocks);
+        byte[][] subKeys = getSubKeys();
+        byte[] L = new byte[4];
+        byte[] R = new byte[4];
+        String[] LString = new String[17];
+        String[] RString = new String[17];
+        for (int i = 0; i < blocks.length; i++) {
+            System.arraycopy(blocks[i], 0, L, 0, 4);
+            System.arraycopy(blocks[i], 4, R, 0, 4);
+            StringBuilder Lbuilder = new StringBuilder();
+            StringBuilder Rbuilder = new StringBuilder();
+            for (int k = 0; k<L.length; k++) {
+                Lbuilder.append(byteToBits(L[k]));
+                Rbuilder.append(byteToBits(R[k]));
+            }
+            LString[0] = String.valueOf(Lbuilder);
+            RString[0] = String.valueOf(Rbuilder);
+            int count = 16;
+                for (int j = 1; j < 17; j++) {
+                    LString[j] = RString[j - 1];
+                    if (j == 16) {
+                        LString[j] = LString[j].substring(0, 32);
+                    }
+                    RString[j] = XOR(LString[j - 1], fForEncrypting(RString, subKeys[count-j]));
+                }
+            String finish = RString[16] + LString[16];
+            String result = permuteWithIPMinus1(finish);
+            D.append(result);
+        }
+        System.out.println(D);
+        decrypted = binaryToAscii(String.valueOf(D));
+        return decrypted;
     }
 
-    public static byte XOR(byte L, byte R) {
-        byte result = 0;
-        String lstr = byteToBits(L);
-        String rstr = byteToBits(R);
-
-        for (int i = 0; i < 8; i++) {
-            char c1 = lstr.charAt(i);
-            char c2 = rstr.charAt(i);
-            if (c1 != c2) {
-                result |= (byte) (1 << (7 - i));
+    public static String permuteWithIPMinus1(String R) {
+        StringBuilder permutedMessage = new StringBuilder();
+        for (int i = 0; i < IPPowerMinus1.length; i++) {
+            // Pobierz indeks bitu do permutacji z tablicy E
+            int index = IPPowerMinus1[i] - 1;
+            // Dodaj ten bit do wiadomości permutowanej
+            permutedMessage.append(R.charAt(index));
+        }
+        return permutedMessage.toString();
+    }
+    public static String fForEncrypting(String[] R, byte[] subKey){
+        StringBuilder Rstring = new StringBuilder();
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i<R.length; i++){
+            Rstring.append(R[i]);
+        }
+        String permutatedR = permuteWithE(String.valueOf(Rstring));
+        StringBuilder keyString = new StringBuilder();
+        for (int i = 0; i<subKey.length; i++){
+            keyString.append(byteToBits(subKey[i]));
+        }
+        String xorResult = XOR(permutatedR, String.valueOf(keyString));
+        String[] B = new String[8];
+        for (int i = 0; i<8; i++) {
+            for (int j = 0; j < 6; j++) {
+                if (B[i] == null) {
+                    B[i] = String.valueOf(xorResult.charAt((6 * i) + j));
+                } else {
+                    B[i] += xorResult.charAt((6 * i) + j);
+                }
+            }
+            String RowNum = String.valueOf(B[i].charAt(0)) +
+                    B[i].charAt(5);
+            StringBuilder ColNum = new StringBuilder();
+            for (int k = 1; k<5; k++){
+                ColNum.append(B[i].charAt(k));
+            }
+            int row = Integer.parseInt(RowNum, 2);
+            int col = Integer.parseInt(String.valueOf(ColNum), 2);
+            int Index = 64*i+(8 * row + col);
+            result.append(byteToBits(SBoxes[Index]));
+        }
+        return permuteWithP(String.valueOf(result));
+    }
+    public static String permuteWithP(String R) {
+        StringBuilder permutedMessage = new StringBuilder();
+        for (int i = 0; i < P.length; i++) {
+            // Pobierz indeks bitu do permutacji z tablicy E
+            int index = P[i] - 1;
+            // Dodaj ten bit do wiadomości permutowanej
+            permutedMessage.append(R.charAt(index));
+        }
+        return permutedMessage.toString();
+    }
+    public static String permuteWithE(String R) {
+        StringBuilder permutedMessage = new StringBuilder();
+        for (int i = 0; i < E.length; i++) {
+            // Pobierz indeks bitu do permutacji z tablicy E
+            int index = E[i] - 1;
+            // Dodaj ten bit do wiadomości permutowanej
+            permutedMessage.append(R.charAt(index));
+        }
+        return permutedMessage.toString();
+    }
+    public static String XOR(String L, String R) {
+        if (L.length() != R.length()) {
+            throw new IllegalArgumentException("Długości wiadomości nie są równe");
+        }
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < L.length(); i++) {
+            // Pobierz kolejne bity z obu wiadomości
+            char bit1 = L.charAt(i);
+            char bit2 = R.charAt(i);
+            // Wykonaj operację XOR na parach bitów
+            if (bit1 == bit2) {
+                result.append('0'); // Bity są takie same, więc wynik jest 0
+            } else {
+                result.append('1'); // Bity są różne, więc wynik jest 1
             }
         }
-        return result;
+        return result.toString();
     }
 
     public static byte[][] divideIntoBlocks(byte[] messByte) {
@@ -205,26 +360,13 @@ public class DES {
 
         return blocks;
     }
-    public static byte[] addPadding(byte[] block) {
+    public static void addPadding(byte[] block) {
         int paddingZeros = 8 - block.length;
         byte[] padded = Arrays.copyOf(block, 8);
         Arrays.fill(padded, block.length, 8, (byte) paddingZeros);
-        return padded;
     }
 
-    public static String initialPermutation(String text) {
-        StringBuilder permutedText = new StringBuilder();
-        for (int i = 0; i < IP.length; i++) {
-            permutedText.append(text.charAt(IP[i] - 1));
-        }
-        return permutedText.toString();
-    }
-
-    public static void main(String[] args) {
-        encrypt();
-    }
-
-    public static byte[] StringToByte(String s) {
+    public static byte[] HexToByte(String s) {
         byte[] key = new byte[s.length() / 2];
         for (int i = 0; i < s.length() / 2; i++) {
             key[i] += (byte) Integer.parseInt(s.substring(i*2, i*2 + 2), 16);
@@ -244,18 +386,37 @@ public class DES {
 
     public static byte[] turnOffLast() {
         byte[] key;
-        key = StringToByte(strKey);
+        key = HexToByte(strKey);
         for (int i = 0; i < strKey.length() / 2; i++) {
             key[i] = (byte) (key[i] & 0xFE);
         }
         return key;
     }
+    public static byte[] permutateWithPC1(byte[] array) {
+        byte[] permutatedKey = new byte[array.length];
+        int blockIndex = 0;
+        byte current = 0;
+            for (int i = 0; i < PC1.length; i++) {
+                int bitIndex = (PC1[i]-1) % 8;
+                int byteIndex = (PC1[i]-1) / 8;
+                String temp = byteToBits(array[byteIndex]);
+                char bit = temp.charAt(bitIndex);
+                current = (byte) (current << 1);
+                if (bit == '1') current = (byte) (current | 1);
+                if (i % 8 == 7) {
+                    permutatedKey[blockIndex++] = current;
+                    current = 0;
+                }
+            }
+        return permutatedKey;
+    }
 
     public static byte[][] getSubKeys() {
         byte[][] subKeys = new byte[16][];
         byte[] combined = new byte[8];
-        bitKey = turnOffLast();
-
+        //bitKey = turnOffLast();
+        byte[] temp = HexToByte(strKey);
+        bitKey = permutateWithPC1(temp);
         byte[] leftHalf = new byte[4];
         byte[] rightHalf = new byte[4];
 

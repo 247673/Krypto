@@ -8,6 +8,7 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 public class DESController {
 
@@ -22,14 +23,14 @@ public class DESController {
     @FXML
     protected void onEncryptButtonClick() {
         String plainText = WriteText.getText();
-        String encryptedText = desHelp.encrypt(plainText);
+        String encryptedText = Arrays.toString(DES.encrypt(plainText));
         ReadText.setText(encryptedText);
     }
 
     @FXML
     protected void onDecryptButtonClick() {
         String encryptedText = WriteText.getText();
-        String decryptedText = desHelp.decrypt(encryptedText);
+        String decryptedText = DES.decrypt();
         ReadText.setText(decryptedText);
     }
 
