@@ -99,31 +99,66 @@ public class DES {
                     2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11
             };
 
+    public static String stringToHex(String message) {
+        StringBuilder hexString = new StringBuilder();
 
+        // Przekształć każdy znak wiadomości na jego kod ASCII
+        for (char character : message.toCharArray()) {
+            int asciiValue = (int) character;
+
+            // Zamień kod ASCII na jego reprezentację szesnastkową
+            String hexValue = Integer.toHexString(asciiValue);
+
+            // Dodaj zero na początku, jeśli reprezentacja szesnastkowa ma tylko jeden znak
+            if (hexValue.length() == 1) {
+                hexValue = "0" + hexValue;
+            }
+
+            // Dodaj reprezentację szesnastkową do wynikowego ciągu
+            hexString.append(hexValue);
+        }
+
+        return hexString.toString();
+    }
+    public static byte[][] permuteBlocks(byte[][] array) {
+        byte[][] permutatedBlock = new byte[array.length][8];
+        int blockIndex = 0;
+        byte current = 0;
+        for (int j = 0; j<array.length; j++) {
+            for (int i = 0; i < IP.length; i++) {
+                int bitIndex = (IP[i]-1) % 8;
+                int byteIndex = (IP[i]-1) / 8;
+                String temp = byteToBits(array[j][byteIndex]);
+                char bit = temp.charAt(bitIndex);
+                current = (byte) (current << 1);
+                if (bit == '1') current = (byte) (current | 1);
+                if (i % 8 == 7) {
+                    permutatedBlock[j][blockIndex++] = current;
+                    current = 0;
+                }
+            }
+        }
+        return permutatedBlock;
+    }
     public static void encrypt() {
         Scanner myObj = new Scanner(System.in);
         System.out.print("Wprowadź tekst: ");
         String message = myObj.nextLine();
-        String binaryText = stringToBinary(message);
-        System.out.println("Binary representation: " + binaryText);
-        String[] blocks = divideIntoBlocks(binaryText);
-        padding(blocks[blocks.length-1]);
-        byte[][] byteBlock = new byte[blocks.length][];
-        String[] permutatedBlock;
-        for (int i = 0; i < blocks.length; i++) {
-            permutatedBlock = new String[]{initialPermutation(blocks[i])};
-            System.out.println("Permutated text: " + permutatedBlock[i]);
-            byteBlock[i] = StringToByte(permutatedBlock[i]);
-        }
+        String messHex = stringToHex(message);
+        byte[] messByte = StringToByte(messHex);
+        byte[][] blocks = divideIntoBlocks(messByte);
+        addPadding(blocks[blocks.length-1]);
+        System.out.println(Arrays.deepToString(blocks));
+        blocks = permuteBlocks(blocks);
+        System.out.println(Arrays.deepToString(blocks));
         byte[][] subKeys = getSubKeys();
-        System.out.println(Arrays.deepToString(subKeys));
         byte[] L = new byte[16];
         byte[] R = new byte[16];
-        for (int j = 0; j<blocks.length; j++){
-            System.arraycopy(byteBlock[j], 0, L, 0, 8);
-            System.arraycopy(byteBlock[j], 8, R, 0, 8);
-            System.out.println(L[0]);
-            System.out.println(R[0]);
+        for (int j = 0; j<blocks.length; j++) {
+         //   System.arraycopy(byteBlock[j], 0, L, 0, 8);
+         //   System.arraycopy(byteBlock[j], 8, R, 0, 8);
+         //   System.out.println(L[0]);
+         //   System.out.println(R[0]);
             /*
             for (int i = 1; i<17; i++){
               L[i] = R[i-1];
@@ -135,62 +170,46 @@ public class DES {
         }
     }
 
-    public static byte[] XOR (byte[] L, byte[] F) {
-        byte[] xorResult = new byte[8];
-        for (int i = 0; i < 8; i++) {
-            xorResult[i] = (byte) (L[i] ^ F[i]);
-        }
-        return xorResult;
-    }
-    public static String fForEncrypting(byte R, byte[] K){
+    public static byte XOR(byte L, byte R) {
+        byte result = 0;
+        String lstr = byteToBits(L);
+        String rstr = byteToBits(R);
 
-        for (int i = 0; i < E.length; i++) {
-        }
-return "mama";
-    }
-    public static String stringToBinary(String text) {
-        StringBuilder binary = new StringBuilder();
-        for (char character : text.toCharArray()) {
-            String charBinary = Integer.toBinaryString(character);
-            // Uzupełnienie zerami z przodu, jeśli długość ciągu binarnego jest mniejsza niż 8 bitów
-            while (charBinary.length() < 8) {
-                charBinary = "0" + charBinary;
+        for (int i = 0; i < 8; i++) {
+            char c1 = lstr.charAt(i);
+            char c2 = rstr.charAt(i);
+            if (c1 != c2) {
+                result |= (byte) (1 << (7 - i));
             }
-            binary.append(charBinary);
         }
-        return binary.toString();
+        return result;
     }
-    public static String[] divideIntoBlocks(String binaryString) {
+
+    public static byte[][] divideIntoBlocks(byte[] messByte) {
         // Określenie liczby bloków na podstawie długości ciągu binarnego i wielkości bloku
-        int numBlocks = (int) Math.ceil((double) binaryString.length() / 64);
+        int numBlocks = (int) Math.ceil((double) messByte.length / 8);
         // Inicjalizacja tablicy dla bloków
-        String[] blocks = new String[numBlocks];
+        byte[][] blocks = new byte[numBlocks][8];
 
         // Podział ciągu binarnego na bloki
         for (int i = 0; i < numBlocks; i++) {
             // Obliczenie indeksu początkowego dla bieżącego bloku
-            int startIndex = i * 64;
+            int startIndex = i * 8;
             // Obliczenie indeksu końcowego dla bieżącego bloku
-            int endIndex = Math.min((i + 1) * 64, binaryString.length());
-            // Wycięcie bieżącego bloku z ciągu binarnego
-            String block = binaryString.substring(startIndex, endIndex);
-
-            // Dodanie bloku do tablicy
-            blocks[i] = block;
+            int endIndex = Math.min((i + 1) * 8, messByte.length);
+            // Wycięcie bieżącego bloku z bajtow
+            for (int j = startIndex; j < endIndex; j++) {
+                blocks[i][j % 8] = messByte[j];
+            }
         }
 
         return blocks;
     }
-    public static void padding(String block) {
-        // Sprawdzenie długości bloku
-        int length = block.length();
-        // Obliczenie liczby brakujących bitów do pełnego 64-bitowego bloku
-        int paddingZeros = 64 - length;
-        // Uzupełnienie bloku zerami
-        StringBuilder paddedBlock = new StringBuilder(block);
-        for (int i = 0; i < paddingZeros; i++) {
-            paddedBlock.append('0');
-        }
+    public static byte[] addPadding(byte[] block) {
+        int paddingZeros = 8 - block.length;
+        byte[] padded = Arrays.copyOf(block, 8);
+        Arrays.fill(padded, block.length, 8, (byte) paddingZeros);
+        return padded;
     }
 
     public static String initialPermutation(String text) {
