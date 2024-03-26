@@ -23,14 +23,14 @@ public class DESController {
     @FXML
     protected void onEncryptButtonClick() {
         String plainText = WriteText.getText();
-        String encryptedText = Arrays.toString(DES.encrypt(plainText));
+        String encryptedText =DES.encrypt(plainText);
         ReadText.setText(encryptedText);
     }
 
     @FXML
     protected void onDecryptButtonClick() {
         String encryptedText = WriteText.getText();
-        String decryptedText = DES.decrypt();
+        String decryptedText = DES.decrypt(encryptedText);
         ReadText.setText(decryptedText);
     }
 

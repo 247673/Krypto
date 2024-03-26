@@ -94,7 +94,7 @@ public class DES {
             2, 8, 24, 14, 32, 27, 3, 9,
             19, 13, 30, 6, 22, 11, 4, 25
     };
-    static byte[] coded;
+    static String coded;
     static String decrypted = "";
 
     public static String stringToHex(String message) {
@@ -141,7 +141,7 @@ public class DES {
     }
 
 
-    public static byte[] encrypt(String plaintext) {
+    public static String encrypt(String plaintext) {
         StringBuilder C = new StringBuilder();
         String messHex = stringToHex(plaintext);
         byte[] messByte = HexToByte(messHex);
@@ -175,10 +175,36 @@ public class DES {
             String result = permuteWithIPMinus1(finish);
             C.append(result);
         }
-        System.out.println(C);
-        coded = binaryStringToBytes(String.valueOf(C));
+        coded = binaryToHex(String.valueOf(C));
         return coded;
     }
+    public static String binaryToHex(String binaryStr) {
+        // Sprawdź, czy długość ciągu binarnego jest wielokrotnością 4
+        if (binaryStr.length() % 4 != 0) {
+            throw new IllegalArgumentException("Długość ciągu binarnego musi być wielokrotnością 4.");
+        }
+
+        // Utwórz tablicę mapowania binarnego na szesnastkowe
+        String[] binaryToHexMap = {"0000", "0001", "0010", "0011",
+                "0100", "0101", "0110", "0111",
+                "1000", "1001", "1010", "1011",
+                "1100", "1101", "1110", "1111"};
+
+        StringBuilder hexStr = new StringBuilder();
+        // Przetwarzaj ciąg binarny po 4 bity i zamieniaj je na odpowiadające im znaki szesnastkowe
+        for (int i = 0; i < binaryStr.length(); i += 4) {
+            String chunk = binaryStr.substring(i, i + 4);
+            for (int j = 0; j < binaryToHexMap.length; j++) {
+                if (binaryToHexMap[j].equals(chunk)) {
+                    hexStr.append(Integer.toHexString(j).toUpperCase());
+                    break;
+                }
+            }
+        }
+
+        return hexStr.toString();
+    }
+
     public static byte[] binaryStringToBytes(String binaryString) {
         int length = binaryString.length();
         byte[] bytes = new byte[length / 8];
@@ -219,11 +245,10 @@ public class DES {
 
         return asciiString.toString();
     }
-    public static String decrypt() {
+    public static String decrypt(String hex) {
         StringBuilder D = new StringBuilder();
-        byte[] messByte = coded;
+        byte[] messByte = HexToByte(hex);
         byte[][] blocks = divideIntoBlocks(messByte);
-        blocks = permuteBlocks(blocks);
         byte[][] subKeys = getSubKeys();
         byte[] L = new byte[4];
         byte[] R = new byte[4];
@@ -369,7 +394,7 @@ public class DES {
     public static byte[] HexToByte(String s) {
         byte[] key = new byte[s.length() / 2];
         for (int i = 0; i < s.length() / 2; i++) {
-            key[i] += (byte) Integer.parseInt(s.substring(i*2, i*2 + 2), 16);
+            key[i] = (byte) Integer.parseInt(s.substring(i * 2, i * 2 + 2), 16);
         }
         return key;
     }
