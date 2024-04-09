@@ -1,6 +1,7 @@
 package com.example.des;
 
-import java.util.Arrays;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 public class DES {
     static String strKey = "0123456789ABCDEF";
@@ -102,10 +103,9 @@ public class DES {
 
         // Przekształć każdy znak wiadomości na jego kod ASCII
         for (char character : message.toCharArray()) {
-            int asciiValue = (int) character;
 
             // Zamień kod ASCII na jego reprezentację szesnastkową
-            String hexValue = Integer.toHexString(asciiValue);
+            String hexValue = Integer.toHexString(character);
 
             // Dodaj zero na początku, jeśli reprezentacja szesnastkowa ma tylko jeden znak
             if (hexValue.length() == 1) {
@@ -118,6 +118,7 @@ public class DES {
 
         return hexString.toString();
     }
+
     public static byte[][] permuteBlocks(byte[][] array) {
         byte[][] permutatedBlock = new byte[array.length][8];
         int blockIndex = 0;
@@ -153,19 +154,19 @@ public class DES {
         byte[] R = new byte[4];
         String[] LString = new String[17];
         String[] RString = new String[17];
-        for (int i = 0; i < blocks.length; i++) {
-            System.arraycopy(blocks[i], 0, L, 0, 4);
-            System.arraycopy(blocks[i], 4, R, 0, 4);
+        for (byte[] block : blocks) {
+            System.arraycopy(block, 0, L, 0, 4);
+            System.arraycopy(block, 4, R, 0, 4);
             StringBuilder Lbuilder = new StringBuilder();
             StringBuilder Rbuilder = new StringBuilder();
-            for (int k = 0; k<L.length; k++) {
+            for (int k = 0; k < L.length; k++) {
                 Lbuilder.append(byteToBits(L[k]));
                 Rbuilder.append(byteToBits(R[k]));
             }
             LString[0] = String.valueOf(Lbuilder);
             RString[0] = String.valueOf(Rbuilder);
-            for (int j = 1; j<17; j++) {
-                LString[j] = RString[j-1];
+            for (int j = 1; j < 17; j++) {
+                LString[j] = RString[j - 1];
                 if (j == 16) {
                     LString[j - 1] = LString[j - 1].substring(0, 32);
                 }
@@ -205,47 +206,7 @@ public class DES {
         return hexStr.toString();
     }
 
-    public static byte[] binaryStringToBytes(String binaryString) {
-        int length = binaryString.length();
-        byte[] bytes = new byte[length / 8];
-
-        // Iterujemy po ciągu binarnym, dzieląc go na 8-bitowe kawałki
-        for (int i = 0; i < length; i += 8) {
-            String byteString = binaryString.substring(i, i + 8);
-            byte b = (byte) Integer.parseInt(byteString, 2); // Parsujemy ciąg binarny do bajta
-            bytes[i / 8] = b; // Wstawiamy bajt do tablicy bajtów
-        }
-
-        return bytes;
-    }
-    public static String removePadding(String paddedBlock) {
-        int paddedValue = paddedBlock.charAt(7) - '0'; // Konwersja znaku na liczbę
-        for (int i = 6; i > 7 - paddedValue; i--) {
-            if (paddedBlock.charAt(i) != paddedBlock.charAt(7)) {
-                return paddedBlock;
-            }
-        }
-        return paddedBlock.substring(0, 8 - paddedValue);
-    }
-    public static String binaryToAscii(String binaryString) {
-        StringBuilder asciiString = new StringBuilder();
-
-        // Iteruj po ciągu binarnym, dzieląc go na kawałki po 8 bitów
-        for (int i = 0; i < binaryString.length(); i += 8) {
-            // Pobierz kolejny bajt z ciągu binarnego
-            String byteString = binaryString.substring(i, Math.min(i + 8, binaryString.length()));
-
-            // Przekonwertuj bajt na znak ASCII
-            int asciiValue = Integer.parseInt(byteString, 2);
-            char asciiChar = (char) asciiValue;
-
-            // Dodaj znak ASCII do wynikowego ciągu
-            asciiString.append(asciiChar);
-        }
-
-        return asciiString.toString();
-    }
-    public static String decrypt(String hex) {
+    public static String decrypt(String hex) throws UnsupportedEncodingException {
         StringBuilder D = new StringBuilder();
         byte[] messByte = HexToByte(hex);
         byte[][] blocks = divideIntoBlocks(messByte);
@@ -254,39 +215,49 @@ public class DES {
         byte[] R = new byte[4];
         String[] LString = new String[17];
         String[] RString = new String[17];
-        for (int i = 0; i < blocks.length; i++) {
-            System.arraycopy(blocks[i], 0, L, 0, 4);
-            System.arraycopy(blocks[i], 4, R, 0, 4);
+        for (byte[] block : blocks) {
+            System.arraycopy(block, 0, L, 0, 4);
+            System.arraycopy(block, 4, R, 0, 4);
             StringBuilder Lbuilder = new StringBuilder();
             StringBuilder Rbuilder = new StringBuilder();
-            for (int k = 0; k<L.length; k++) {
+            for (int k = 0; k < L.length; k++) {
                 Lbuilder.append(byteToBits(L[k]));
                 Rbuilder.append(byteToBits(R[k]));
             }
             LString[0] = String.valueOf(Lbuilder);
             RString[0] = String.valueOf(Rbuilder);
             int count = 16;
-                for (int j = 1; j < 17; j++) {
-                    LString[j] = RString[j - 1];
-                    if (j == 16) {
-                        LString[j] = LString[j].substring(0, 32);
-                    }
-                    RString[j] = XOR(LString[j - 1], fForEncrypting(RString, subKeys[count-j]));
+            for (int j = 1; j < 17; j++) {
+                LString[j] = RString[j - 1];
+                if (j == 16) {
+                    LString[j] = LString[j].substring(0, 32);
                 }
+                RString[j] = XOR(LString[j - 1], fForEncrypting(RString, subKeys[count - j]));
+            }
             String finish = RString[16] + LString[16];
             String result = permuteWithIPMinus1(finish);
             D.append(result);
         }
         System.out.println(D);
-        decrypted = binaryToAscii(String.valueOf(D));
+        decrypted = finalSwapToWindows(String.valueOf(D));
         return decrypted;
+    }
+    public static String finalSwapToWindows(String binaryString) throws UnsupportedEncodingException {
+        StringBuilder ascii = new StringBuilder();
+        int charCode;
+        for (int i = 0; i < binaryString.length(); i += 8) {
+            String byteString = binaryString.substring(i, i + 8);
+            charCode = Integer.parseInt(byteString, 2);
+            ascii.append((char) charCode);
+        }
+        return new String(ascii.toString().getBytes(StandardCharsets.UTF_8), "windows-1250");
     }
 
     public static String permuteWithIPMinus1(String R) {
         StringBuilder permutedMessage = new StringBuilder();
-        for (int i = 0; i < IPPowerMinus1.length; i++) {
+        for (byte b : IPPowerMinus1) {
             // Pobierz indeks bitu do permutacji z tablicy E
-            int index = IPPowerMinus1[i] - 1;
+            int index = b - 1;
             // Dodaj ten bit do wiadomości permutowanej
             permutedMessage.append(R.charAt(index));
         }
@@ -295,13 +266,13 @@ public class DES {
     public static String fForEncrypting(String[] R, byte[] subKey){
         StringBuilder Rstring = new StringBuilder();
         StringBuilder result = new StringBuilder();
-        for (int i = 0; i<R.length; i++){
-            Rstring.append(R[i]);
+        for (String s : R) {
+            Rstring.append(s);
         }
         String permutatedR = permuteWithE(String.valueOf(Rstring));
         StringBuilder keyString = new StringBuilder();
-        for (int i = 0; i<subKey.length; i++){
-            keyString.append(byteToBits(subKey[i]));
+        for (byte b : subKey) {
+            keyString.append(byteToBits(b));
         }
         String xorResult = XOR(permutatedR, String.valueOf(keyString));
         String[] B = new String[8];
@@ -328,9 +299,9 @@ public class DES {
     }
     public static String permuteWithP(String R) {
         StringBuilder permutedMessage = new StringBuilder();
-        for (int i = 0; i < P.length; i++) {
+        for (byte b : P) {
             // Pobierz indeks bitu do permutacji z tablicy E
-            int index = P[i] - 1;
+            int index = b - 1;
             // Dodaj ten bit do wiadomości permutowanej
             permutedMessage.append(R.charAt(index));
         }
@@ -338,9 +309,9 @@ public class DES {
     }
     public static String permuteWithE(String R) {
         StringBuilder permutedMessage = new StringBuilder();
-        for (int i = 0; i < E.length; i++) {
+        for (byte b : E) {
             // Pobierz indeks bitu do permutacji z tablicy E
-            int index = E[i] - 1;
+            int index = b - 1;
             // Dodaj ten bit do wiadomości permutowanej
             permutedMessage.append(R.charAt(index));
         }
@@ -385,11 +356,6 @@ public class DES {
 
         return blocks;
     }
-    public static void addPadding(byte[] block) {
-        int paddingZeros = 8 - block.length;
-        byte[] padded = Arrays.copyOf(block, 8);
-        Arrays.fill(padded, block.length, 8, (byte) paddingZeros);
-    }
 
     public static byte[] HexToByte(String s) {
         byte[] key = new byte[s.length() / 2];
@@ -409,14 +375,6 @@ public class DES {
         return sb.toString();
     }
 
-    public static byte[] turnOffLast() {
-        byte[] key;
-        key = HexToByte(strKey);
-        for (int i = 0; i < strKey.length() / 2; i++) {
-            key[i] = (byte) (key[i] & 0xFE);
-        }
-        return key;
-    }
     public static byte[] permutateWithPC1(byte[] array) {
         byte[] permutatedKey = new byte[array.length];
         int blockIndex = 0;

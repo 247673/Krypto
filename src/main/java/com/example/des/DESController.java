@@ -6,9 +6,9 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 public class DESController {
 
@@ -18,8 +18,6 @@ public class DESController {
     @FXML
     private TextArea ReadText;
 
-    private final DESHelper desHelp = new DESHelper();
-
     @FXML
     protected void onEncryptButtonClick() {
         String plainText = WriteText.getText();
@@ -28,7 +26,7 @@ public class DESController {
     }
 
     @FXML
-    protected void onDecryptButtonClick() {
+    protected void onDecryptButtonClick() throws UnsupportedEncodingException {
         String encryptedText = WriteText.getText();
         String decryptedText = DES.decrypt(encryptedText);
         ReadText.setText(decryptedText);
