@@ -100,24 +100,18 @@ public class DES {
 
     public static String stringToHex(String message) {
         StringBuilder hexString = new StringBuilder();
-
-        // Przekształć każdy znak wiadomości na jego kod ASCII
-        for (char character : message.toCharArray()) {
-
-            // Zamień kod ASCII na jego reprezentację szesnastkową
-            String hexValue = Integer.toHexString(character);
-
-            // Dodaj zero na początku, jeśli reprezentacja szesnastkowa ma tylko jeden znak
-            if (hexValue.length() == 1) {
-                hexValue = "0" + hexValue;
+        try {
+            byte[] bytes = message.getBytes("windows-1250");
+            for (byte b : bytes) {
+                String hexValue = String.format("%02X", b);
+                hexString.append(hexValue);
             }
-
-            // Dodaj reprezentację szesnastkową do wynikowego ciągu
-            hexString.append(hexValue);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
-
         return hexString.toString();
     }
+
 
     public static byte[][] permuteBlocks(byte[][] array) {
         byte[][] permutatedBlock = new byte[array.length][8];
@@ -238,21 +232,27 @@ public class DES {
             String result = permuteWithIPMinus1(finish);
             D.append(result);
         }
-        System.out.println(D);
-        decrypted = finalSwapToWindows(String.valueOf(D));
+        decrypted = binaryToAscii(String.valueOf(D));
         return decrypted;
     }
-    public static String finalSwapToWindows(String binaryString) throws UnsupportedEncodingException {
-        StringBuilder ascii = new StringBuilder();
-        int charCode;
-        for (int i = 0; i < binaryString.length(); i += 8) {
-            String byteString = binaryString.substring(i, i + 8);
-            charCode = Integer.parseInt(byteString, 2);
-            ascii.append((char) charCode);
-        }
-        return new String(ascii.toString().getBytes(StandardCharsets.UTF_8), "windows-1250");
-    }
+    public static String binaryToAscii(String binaryString) {
+        StringBuilder asciiString = new StringBuilder();
 
+        // Iteruj po ciągu binarnym, dzieląc go na kawałki po 8 bitów
+        for (int i = 0; i < binaryString.length(); i += 8) {
+            // Pobierz kolejny bajt z ciągu binarnego
+            String byteString = binaryString.substring(i, Math.min(i + 8, binaryString.length()));
+
+            // Przekonwertuj bajt na znak ASCII
+            int asciiValue = Integer.parseInt(byteString, 2);
+            char asciiChar = (char) asciiValue;
+
+            // Dodaj znak ASCII do wynikowego ciągu
+            asciiString.append(asciiChar);
+        }
+
+        return asciiString.toString();
+    }
     public static String permuteWithIPMinus1(String R) {
         StringBuilder permutedMessage = new StringBuilder();
         for (byte b : IPPowerMinus1) {
@@ -359,8 +359,13 @@ public class DES {
 
     public static byte[] HexToByte(String s) {
         byte[] key = new byte[s.length() / 2];
-        for (int i = 0; i < s.length() / 2; i++) {
-            key[i] = (byte) Integer.parseInt(s.substring(i * 2, i * 2 + 2), 16);
+        try {
+            byte[] bytes = s.getBytes("windows-1250");
+            for (int i = 0; i < s.length() / 2; i++) {
+                key[i] = bytes[i * 2];
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
         return key;
     }
