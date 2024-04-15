@@ -7,7 +7,6 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.Arrays;
-
 public class DESApp extends Application {
     @Override
     public void start(Stage stage) throws IOException {
@@ -16,7 +15,6 @@ public class DESApp extends Application {
         stage.setTitle("DES Encryption/Decryption");
         stage.setScene(scene);
         stage.show();
-        System.out.println(Arrays.deepToString(DES.getSubKeys()));
     }
 
     public static void main(String[] args) {

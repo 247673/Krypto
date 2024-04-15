@@ -151,9 +151,34 @@ public class DES {
     }
     public static String bytesToHex(byte[] bytes) {
         BigInteger bigInt = new BigInteger(1, bytes);
-        return bigInt.toString(16).toUpperCase();
-    }
+        String hexString = bigInt.toString(16).toUpperCase();
 
+        // Dodaj wiodące zera, jeśli trzeba
+        int paddingLength = (bytes.length * 2) - hexString.length();
+        if (paddingLength > 0) {
+            StringBuilder padding = new StringBuilder();
+            for (int i = 0; i < paddingLength; i++) {
+                padding.append("0");
+            }
+            hexString = padding + hexString;
+        }
+
+        return hexString;
+    }
+    public static String hexToString(String hex) {
+        StringBuilder output = new StringBuilder();
+
+        // Przetwarzamy po 2 znaki w ciągu szesnastkowym
+        for (int i = 0; i < hex.length(); i += 2) {
+            String hexPair = hex.substring(i, Math.min(i + 2, hex.length()));
+
+            // Parsujemy parę szesnastkową na znak ASCII
+            int decimal = Integer.parseInt(hexPair, 16);
+            output.append((char) decimal);
+        }
+
+        return output.toString();
+    }
     public static byte[][] permuteBlocks(byte[][] array) {
         byte[][] permutatedBlock = new byte[array.length][8];
         int blockIndex = 0;
@@ -187,8 +212,6 @@ public class DES {
         for (int i = 0; i < blocks.length; i++) {
             System.arraycopy(blocks[i], 0, L, 0, 4);
             System.arraycopy(blocks[i], 4, R, 0, 4);
-            System.out.println(Arrays.toString(R));
-            System.out.println(Arrays.toString(L));
             byte[][] subKeys = getSubKeys();
             for (int j = 0; j < 16; j++) {
                 byte[] lastRoundR = R;
@@ -201,12 +224,9 @@ public class DES {
             }
             System.arraycopy(L, 0, blocks[i], 4, 4);
             System.arraycopy(R, 0, blocks[i], 0, 4);
-            System.out.println(Arrays.toString(blocks[i]));
             byte[] result = permutate(IPPowerMinus1, blocks[i], 8);
-            System.out.println(Arrays.toString(result));
             code.append(bytesToHex(result));
         }
-        System.out.println(code);
         return String.valueOf(code);
     }
     public static String decrypt(String hextext) {
@@ -219,8 +239,6 @@ public class DES {
         for (int i = 0; i < blocks.length; i++) {
             System.arraycopy(blocks[i], 0, L, 0, 4);
             System.arraycopy(blocks[i], 4, R, 0, 4);
-            System.out.println(Arrays.toString(R));
-            System.out.println(Arrays.toString(L));
             byte[][] subKeys = getSubKeys();
             for (int j = 0; j < 16; j++) {
                 byte[] lastRoundR = R;
@@ -233,27 +251,10 @@ public class DES {
             }
             System.arraycopy(L, 0, blocks[i], 4, 4);
             System.arraycopy(R, 0, blocks[i], 0, 4);
-            System.out.println(Arrays.toString(blocks[i]));
             byte[] result = permutate(IPPowerMinus1, blocks[i], 8);
-            System.out.println(Arrays.toString(result));
             code.append(hexToString(bytesToHex(result)));
         }
-        System.out.println(code);
         return String.valueOf(code);
-    }
-    public static String hexToString(String hex) {
-        StringBuilder output = new StringBuilder();
-
-        // Przetwarzamy po 2 znaki w ciągu szesnastkowym
-        for (int i = 0; i < hex.length(); i += 2) {
-            String hexPair = hex.substring(i, Math.min(i + 2, hex.length()));
-
-            // Parsujemy parę szesnastkową na znak ASCII
-            int decimal = Integer.parseInt(hexPair, 16);
-            output.append((char) decimal);
-        }
-
-        return output.toString();
     }
 
     public static byte[] SBoxOperation(byte[] R){
@@ -302,7 +303,7 @@ public class DES {
 
     public static byte[][] divideIntoBlocks(byte[] messByte) {
         // Określenie liczby bloków na podstawie długości ciągu binarnego i wielkości bloku
-        int numBlocks = (int) Math.ceil((double) messByte.length / 8);
+        int numBlocks = (int) Math.ceil(messByte.length / 8.0);
         // Inicjalizacja tablicy dla bloków
         byte[][] blocks = new byte[numBlocks][8];
 
