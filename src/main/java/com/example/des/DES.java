@@ -2,12 +2,14 @@ package com.example.des;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.util.Arrays;
 
 public class DES {
     static String strKey = "0123456789ABCDEF";
 
     static byte[] bitKey;
+
+    static String coded;
+    static String decoded;
 
     static final byte[] IP = {
             58, 50, 42, 34, 26, 18, 10, 2,
@@ -185,8 +187,8 @@ public class DES {
         byte current = 0;
         for (int j = 0; j<array.length; j++) {
             for (int i = 0; i < IP.length; i++) {
-                int bitIndex = (IP[i]-1) % 8;
-                int byteIndex = (IP[i]-1) / 8;
+                int bitIndex = (IP[i] - 1) % 8;
+                int byteIndex = (IP[i] - 1) / 8;
                 String temp = byteToBits(array[j][byteIndex]);
                 char bit = temp.charAt(bitIndex);
                 current = (byte) (current << 1);
@@ -201,10 +203,8 @@ public class DES {
         return permutatedBlock;
     }
 
-    public static String encrypt(String plaintext) {
-        String messHex = stringToHex(plaintext);
-        byte[] messByte = hexToBytes(messHex);
-        byte[][] blocks = divideIntoBlocks(messByte);
+    public static byte[] encrypt(byte[] message) {
+        byte[][] blocks = divideIntoBlocks(message);
         blocks = permuteBlocks(blocks);
         byte[] L = new byte[4];
         byte[] R = new byte[4];
@@ -227,11 +227,12 @@ public class DES {
             byte[] result = permutate(IPPowerMinus1, blocks[i], 8);
             code.append(bytesToHex(result));
         }
-        return String.valueOf(code);
+        coded = String.valueOf(code);
+        return hexToBytes(stringToHex(coded));
     }
-    public static String decrypt(String hextext) {
-        byte[] messByte = hexToBytes(hextext);
-        byte[][] blocks = divideIntoBlocks(messByte);
+
+    public static byte[] decrypt(byte[] message) {
+        byte[][] blocks = divideIntoBlocks(message);
         blocks = permuteBlocks(blocks);
         byte[] L = new byte[4];
         byte[] R = new byte[4];
@@ -254,7 +255,8 @@ public class DES {
             byte[] result = permutate(IPPowerMinus1, blocks[i], 8);
             code.append(hexToString(bytesToHex(result)));
         }
-        return String.valueOf(code);
+        decoded = String.valueOf(code);
+        return hexToBytes(stringToHex(decoded));
     }
 
     public static byte[] SBoxOperation(byte[] R){
@@ -347,26 +349,22 @@ public class DES {
                 leftHalf = rotateLeft(leftHalf, 2);
                 rightHalf = rotateLeft(rightHalf, 2);
             }
-            combined = concatenateHalves(leftHalf, rightHalf);
+            combined = addHalves(leftHalf, rightHalf);
             subKeys[i] = permutate(PC2, combined, 6);
         }
         return subKeys;
     }
 
-    public static byte[] concatenateHalves(byte[] leftHalf, byte[] rightHalf) {
-        byte[] combined = new byte[7]; // Tablica na połączone połówki (56 bitów)
+    public static byte[] addHalves(byte[] leftHalf, byte[] rightHalf) {
+        byte[] combined = new byte[7];
 
-        // Kopiowanie 3 pierwszych bajtów z lewej połowy
         System.arraycopy(leftHalf, 0, combined, 0, 3);
 
-        // Ustawienie 4. bajtu: 4 najmłodsze bity z 4. bajtu z lewej połowy + 4 najstarsze bity z 1. bajtu z prawej połowy
         combined[3] = (byte) (((leftHalf[3] & 0xF0)) | ((rightHalf[0] & 0xF0) >> 4));
 
-        // Kopiowanie 3 kolejnych bajtów z prawej połowy, przesuwając bity
         for (int j = 4; j < 7; j++) {
             combined[j] = (byte) (((rightHalf[j - 4] & 0x0F) << 4) | ((rightHalf[j - 3] & 0xF0) >> 4));
         }
-
         return combined;
     }
     public static byte[] permutate(byte[] array1, byte[] array2, int n) {

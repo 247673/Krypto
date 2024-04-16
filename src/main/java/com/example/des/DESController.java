@@ -6,44 +6,146 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.Arrays;
+
+import static com.example.des.DES.*;
 
 public class DESController {
 
     @FXML
-    private TextArea WriteText;
+    private TextArea EncryptionText;
 
     @FXML
-    private TextArea ReadText;
+    private TextArea DecryptionText;
+
+    private boolean textFile = false;
+
+    private final FileChooser fileChooser = new FileChooser();
+
+    @FXML
+    protected void onTextClick() {
+        textFile = false;
+    }
+
+    @FXML
+    protected void onFileClick() {
+        textFile = true;
+    }
 
     @FXML
     protected void onEncryptButtonClick() {
-        String plainText = WriteText.getText();
-        String encryptedText =DES.encrypt(plainText);
-        ReadText.setText(encryptedText);
+        if (textFile) {
+            encrypt(EncryptionText.getText().getBytes()); // Szyfrowanie danych binarnych
+            DecryptionText.setText(coded);
+        } else {
+            encrypt(EncryptionText.getText().getBytes()); // Szyfrowanie tekstu po konwersji na surowe dane binarne
+            DecryptionText.setText(coded);
+        }
     }
 
     @FXML
-    protected void onDecryptButtonClick() throws UnsupportedEncodingException {
-        String encryptedText = WriteText.getText();
-        String decryptedText = DES.decrypt(encryptedText);
-        ReadText.setText(decryptedText);
+    protected void onDecryptButtonClick() {
+            decrypt(hexToBytes(DecryptionText.getText())); // Odszyfrowanie tekstu po konwersji na surowe dane binarne
+            EncryptionText.setText(decoded);
+    }
+
+    private String getFileExtension(File file) {
+        String name = file.getName();
+        int lastIndexOfDot = name.lastIndexOf('.');
+        if (lastIndexOfDot == -1 || lastIndexOfDot == 0 || lastIndexOfDot == name.length() - 1) {
+            return null; // Plik nie ma rozszerzenia lub jest ukryty
+        }
+        return name.substring(lastIndexOfDot + 1);
     }
 
     @FXML
-    protected void onLoadFileButtonClick() {
+    protected void onLoadFileButtonClickE() {
+        try {
+            fileChooser.getExtensionFilters().addAll();
+            File file = fileChooser.showOpenDialog(new Stage());
+            if(file == null){
+                throw new Exception("File");
+            }
+            Dao<String> daoFile = DaoFactory.getFileDao(file.getPath());
+            EncryptionText.setText(stringToHex(bytesToHex(daoFile.read())));
+            EncryptionText.setText(Arrays.toString(EncryptionText.getText().getBytes()));
+        } catch (Exception e) {
+            throw new NullPointerException("Nie wybrano pliku");
+        }
+    }
+
+    @FXML
+    protected void onSaveFileButtonClickE() {
+        try {
+            if (DecryptionText.getText().isEmpty()) {
+                throw new NullPointerException("Pole do zapisu jest puste");
+            } else {
+                fileChooser.getExtensionFilters().addAll();
+                File file = fileChooser.showSaveDialog(new Stage());
+                if(file == null){
+                    throw new Exception("File");
+                }
+                Dao<String> daoFile = DaoFactory.getFileDao(file.getPath());
+                daoFile.writeCipher(DecryptionText.getText());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    @FXML
+    protected void onLoadFileButtonClickD() {
+        String plain;
+        try {
+            fileChooser.getExtensionFilters().addAll();
+            File file = fileChooser.showOpenDialog(new Stage());
+            if(file == null){
+                throw new Exception("File");
+            }
+            Dao<String> daoFile = DaoFactory.getFileDao(file.getPath());
+            plain = daoFile.readCipher();
+            DecryptionText.setText(plain);
+        } catch (Exception e) {
+            throw new NullPointerException("Nie wybrano pliku");
+        }
+    }
+
+    @FXML
+    protected void onSaveFileButtonClickD() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Open Text File");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
-        File file = fileChooser.showOpenDialog(new Stage());
+        fileChooser.setTitle("Save File");
+
+        // Dodajemy filtry rozszerzeń dla różnych formatów
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Pliki tekstowe (*.txt)", "*.txt"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Pliki binarne (*.exe)", "*.exe"));
+
+        // Wybierz plik do zapisu
+        File file = fileChooser.showSaveDialog(new Stage());
+
         if (file != null) {
             try {
-                String content = new String(Files.readAllBytes(Paths.get(file.getPath())));
-                WriteText.setText(content);
-            } catch (Exception e) {
-                System.err.println("Nie udało się załadować pliku: " + e.getMessage());
+                // Pobierz tekst do zapisania
+                String textToSave = DecryptionText.getText();
+
+                // Sprawdź wybrany filtr
+                String selectedExtension = fileChooser.getSelectedExtensionFilter().getDescription();
+                boolean isBinary = selectedExtension.equals("Pliki binarne (*.exe)");
+
+                // Zapisz dane do pliku
+                if (isBinary) {
+                    // Zapisz jako plik binarny
+                    byte[] data = hexToBytes(stringToHex(textToSave));
+                    Files.write(file.toPath(), data);
+                } else {
+                    // Zapisz jako plik tekstowy
+                    Files.write(file.toPath(), textToSave.getBytes());
+                }
+
+                System.out.println("Plik został zapisany.");
+            } catch (IOException e) {
+                System.err.println("Nie udało się zapisać pliku: " + e.getMessage());
             }
         }
     }
