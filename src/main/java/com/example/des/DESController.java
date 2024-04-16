@@ -24,6 +24,8 @@ public class DESController {
 
     private final FileChooser fileChooser = new FileChooser();
 
+    byte[] fileData;
+
     @FXML
     protected void onTextClick() {
         textFile = false;
@@ -37,18 +39,21 @@ public class DESController {
     @FXML
     protected void onEncryptButtonClick() {
         if (textFile) {
-            encrypt(EncryptionText.getText().getBytes()); // Szyfrowanie danych binarnych
-            DecryptionText.setText(coded);
-        } else {
-            encrypt(EncryptionText.getText().getBytes()); // Szyfrowanie tekstu po konwersji na surowe dane binarne
-            DecryptionText.setText(coded);
+            fileData = encrypt(fileData); // Szyfrowanie danych binarnych
+            DES des = new DES();
+            DecryptionText.setText(des.bytesToHex(fileData));
+        } else if(!textFile) {
+            fileData = encrypt(EncryptionText.getText().getBytes()); // Szyfrowanie tekstu po konwersji na surowe dane binarne
+            DES des = new DES();
+            DecryptionText.setText(des.bytesToHex(fileData));
         }
     }
 
     @FXML
     protected void onDecryptButtonClick() {
-            decrypt(hexToBytes(DecryptionText.getText())); // Odszyfrowanie tekstu po konwersji na surowe dane binarne
-            EncryptionText.setText(decoded);
+            fileData = decrypt(fileData); // Odszyfrowanie tekstu po konwersji na surowe dane binarne
+            DES des = new DES();
+            EncryptionText.setText(des.hexToString(des.bytesToHex(fileData)));
     }
 
     private String getFileExtension(File file) {
@@ -69,8 +74,8 @@ public class DESController {
                 throw new Exception("File");
             }
             Dao<String> daoFile = DaoFactory.getFileDao(file.getPath());
-            EncryptionText.setText(stringToHex(bytesToHex(daoFile.read())));
-            EncryptionText.setText(Arrays.toString(EncryptionText.getText().getBytes()));
+            fileData = daoFile.read();
+            EncryptionText.setText(EncryptionText.getText());
         } catch (Exception e) {
             throw new NullPointerException("Nie wybrano pliku");
         }
@@ -88,7 +93,7 @@ public class DESController {
                     throw new Exception("File");
                 }
                 Dao<String> daoFile = DaoFactory.getFileDao(file.getPath());
-                daoFile.writeCipher(DecryptionText.getText());
+                daoFile.write(fileData);
             }
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());

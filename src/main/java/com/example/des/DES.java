@@ -206,9 +206,9 @@ public class DES {
     public static byte[] encrypt(byte[] message) {
         byte[][] blocks = divideIntoBlocks(message);
         blocks = permuteBlocks(blocks);
+        byte[] result = new byte[blocks.length * 8];
         byte[] L = new byte[4];
         byte[] R = new byte[4];
-        StringBuilder code = new StringBuilder();
         for (int i = 0; i < blocks.length; i++) {
             System.arraycopy(blocks[i], 0, L, 0, 4);
             System.arraycopy(blocks[i], 4, R, 0, 4);
@@ -224,11 +224,10 @@ public class DES {
             }
             System.arraycopy(L, 0, blocks[i], 4, 4);
             System.arraycopy(R, 0, blocks[i], 0, 4);
-            byte[] result = permutate(IPPowerMinus1, blocks[i], 8);
-            code.append(bytesToHex(result));
+            byte[] temp = permutate(IPPowerMinus1, blocks[i], 8);
+            System.arraycopy(temp, 0, result, i * 8, 8);
         }
-        coded = String.valueOf(code);
-        return hexToBytes(stringToHex(coded));
+        return result;
     }
 
     public static byte[] decrypt(byte[] message) {
@@ -236,7 +235,7 @@ public class DES {
         blocks = permuteBlocks(blocks);
         byte[] L = new byte[4];
         byte[] R = new byte[4];
-        StringBuilder code = new StringBuilder();
+        byte[] result = new byte[blocks.length * 8];
         for (int i = 0; i < blocks.length; i++) {
             System.arraycopy(blocks[i], 0, L, 0, 4);
             System.arraycopy(blocks[i], 4, R, 0, 4);
@@ -252,11 +251,10 @@ public class DES {
             }
             System.arraycopy(L, 0, blocks[i], 4, 4);
             System.arraycopy(R, 0, blocks[i], 0, 4);
-            byte[] result = permutate(IPPowerMinus1, blocks[i], 8);
-            code.append(hexToString(bytesToHex(result)));
+            byte[] temp = permutate(IPPowerMinus1, blocks[i], 8);
+            System.arraycopy(temp, 0, result, i * 8, 8);
         }
-        decoded = String.valueOf(code);
-        return hexToBytes(stringToHex(decoded));
+        return result;
     }
 
     public static byte[] SBoxOperation(byte[] R){
