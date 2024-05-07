@@ -8,9 +8,6 @@ public class DES {
 
     static byte[] bitKey;
 
-    static String coded;
-    static String decoded;
-
     static final byte[] IP = {
             58, 50, 42, 34, 26, 18, 10, 2,
             60, 52, 44, 36, 28, 20, 12, 4,
@@ -260,8 +257,8 @@ public class DES {
     public static byte[] SBoxOperation(byte[] R){
         StringBuilder binary = new StringBuilder();
         StringBuilder result = new StringBuilder();
-        for (int i=0; i<R.length; i++){
-            binary.append(byteToBits(R[i]));
+        for (byte b : R) {
+            binary.append(byteToBits(b));
         }
         int SBoxNum = 0;
         for (int i = 0; i<binary.length(); i += 6){

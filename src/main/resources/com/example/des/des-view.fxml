@@ -6,17 +6,20 @@
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.des.DESController">
    <TextArea fx:id="EncryptionText" layoutX="31.0" layoutY="87.0" prefHeight="200.0" prefWidth="200.0" />
    <TextArea fx:id="DecryptionText" layoutX="386.0" layoutY="87.0" prefHeight="200.0" prefWidth="200.0" />
-   <Button fx:id="Encrypt" layoutX="275.0" layoutY="100.0" mnemonicParsing="false" onAction="#onEncryptButtonClick" text="Encrypt" />
-   <Button fx:id="Decrypt" layoutX="274.0" layoutY="137.0" mnemonicParsing="false" onAction="#onDecryptButtonClick" text="Decrypt" />
+   <Button fx:id="Encrypt" layoutX="276.0" layoutY="140.0" mnemonicParsing="false" onAction="#onEncryptButtonClick" text="Encrypt" />
+   <Button fx:id="Decrypt" layoutX="274.0" layoutY="174.0" mnemonicParsing="false" onAction="#onDecryptButtonClick" text="Decrypt" />
    <Button fx:id="loadFileE" layoutX="99.0" layoutY="330.0" mnemonicParsing="false" onAction="#onLoadFileButtonClickE" text="Load File" />
-   <Button fx:id="chooseFile" layoutX="287.0" layoutY="227.0" mnemonicParsing="false" onAction="#onFileClick" text="File" />
-   <Button fx:id="chooseText" layoutX="284.0" layoutY="188.0" mnemonicParsing="false" onAction="#onTextClick" text="Text" />
+   <Button fx:id="chooseFile" layoutX="286.0" layoutY="254.0" mnemonicParsing="false" onAction="#onFileClick" text="File" />
+   <Button fx:id="chooseText" layoutX="284.0" layoutY="214.0" mnemonicParsing="false" onAction="#onTextClick" text="Text" />
    <Button fx:id="saveFileE" layoutX="100.0" layoutY="298.0" mnemonicParsing="false" onAction="#onSaveFileButtonClickE" text="Save File" />
-   <Button fx:id="saveFileD" layoutX="467.0" layoutY="298.0" mnemonicParsing="false" onAction="#onSaveFileButtonClickD" text="Save File" />
-   <Button fx:id="loadFileD" layoutX="467.0" layoutY="330.0" mnemonicParsing="false" onAction="#onLoadFileButtonClickD" text="Load File" />
+   <Button fx:id="saveFileD" layoutX="455.0" layoutY="298.0" mnemonicParsing="false" onAction="#onSaveFileButtonClickD" text="Save File" />
+   <Button fx:id="loadFileD" layoutX="454.0" layoutY="330.0" mnemonicParsing="false" onAction="#onLoadFileButtonClickD" text="Load File" />
    <AnchorPane layoutX="31.0" layoutY="13.0" prefHeight="51.0" prefWidth="193.0">
       <children>
          <TextField editable="false" layoutX="60.0" layoutY="31.0" prefHeight="25.0" prefWidth="73.0" text="Encryption" />
       </children></AnchorPane>
-   <TextField editable="false" layoutX="463.0" layoutY="44.0" prefHeight="25.0" prefWidth="73.0" text="Decryption" />
+   <TextField editable="false" layoutX="449.0" layoutY="44.0" prefHeight="25.0" prefWidth="73.0" text="Decryption" />
+   <Label fx:id="str" layoutX="282.0" layoutY="23.0" text="Hex Key" />
+   <Button fx:id="keyButton" layoutX="278.0" layoutY="81.0" mnemonicParsing="false" onAction="#onKeyButton" text="Confirm" />
+   <TextField fx:id="hexKey" layoutX="229.0" layoutY="44.0" />
 </AnchorPane>

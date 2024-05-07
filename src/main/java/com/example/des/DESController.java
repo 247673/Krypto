@@ -1,14 +1,16 @@
 package com.example.des;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
 
 import static com.example.des.DES.*;
 
@@ -19,6 +21,9 @@ public class DESController {
 
     @FXML
     private TextArea DecryptionText;
+
+    @FXML
+    private TextField hexKey;
 
     private boolean textFile = false;
 
@@ -40,20 +45,17 @@ public class DESController {
     protected void onEncryptButtonClick() {
         if (textFile) {
             fileData = encrypt(fileData); // Szyfrowanie danych binarnych
-            DES des = new DES();
-            DecryptionText.setText(des.bytesToHex(fileData));
-        } else if(!textFile) {
+            DecryptionText.setText(bytesToHex(fileData));
+        } else {
             fileData = encrypt(EncryptionText.getText().getBytes()); // Szyfrowanie tekstu po konwersji na surowe dane binarne
-            DES des = new DES();
-            DecryptionText.setText(des.bytesToHex(fileData));
+            DecryptionText.setText(bytesToHex(fileData));
         }
     }
 
     @FXML
     protected void onDecryptButtonClick() {
             fileData = decrypt(fileData); // Odszyfrowanie tekstu po konwersji na surowe dane binarne
-            DES des = new DES();
-            EncryptionText.setText(des.hexToString(des.bytesToHex(fileData)));
+            EncryptionText.setText(hexToString(bytesToHex(fileData)));
     }
 
     private String getFileExtension(File file) {
@@ -153,5 +155,13 @@ public class DESController {
                 System.err.println("Nie udało się zapisać pliku: " + e.getMessage());
             }
         }
+    }
+
+    public void onKeyButton(ActionEvent actionEvent) {
+        if (hexKey.getText().length() == 16) {
+            strKey = hexKey.getText();
+            hexKey.setText(strKey);
+        }
+        System.out.println(strKey);
     }
 }
